@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Pfs4;
 
 namespace yumi1
 {
@@ -55,7 +56,6 @@ namespace yumi1
             ControllerInfo selectedController = controllers.First();
 
             Console.Out.WriteLine(selectedController.Name + " " + selectedController.HostName + " " + selectedController.IPAddress + " " + selectedController.Availability);
-            Console.Read();
 
             if (selectedController.Availability == Availability.Available)
             {
@@ -89,20 +89,38 @@ namespace yumi1
             Console.ReadKey(false);
         }
 
-        private static StringBuilder ReadRequest(string transferFile)
+        private static StringBuilder ReadReplaceRequest(string transferFile, string code)
         {
             StringBuilder request = new StringBuilder();
             try
             {
                 using (StreamReader streamReader = new StreamReader(transferFile))
                 {
+                    int index;
                     string fileContents;
                     fileContents = streamReader.ReadToEnd();
                     fileContents.Trim();
                     // make sure the request's line returns are the correct format
+                    fileContents = Regex.Replace(fileContents, @"(?<=\bSERIAL_NUM=).*", code);
                     fileContents = Regex.Replace(fileContents, @"(\r*\n)+", "\r\n");
                     request.AppendLine(fileContents);
                     request.AppendLine(); // add a blank line at the end
+                }
+                try
+                {
+                    using (StreamWriter streamWriter = new StreamWriter("transfer_file_processed.txt", false))
+                    {
+                        streamWriter.Write(request);
+                        streamWriter.WriteLine();
+                        streamWriter.WriteLine();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    StringBuilder errorMessage = new StringBuilder();
+                    errorMessage.AppendLine("TestLink Error: Write to transfer file failed");
+                    errorMessage.AppendLine(ex.ToString());
+                    throw new Exception(errorMessage.ToString());
                 }
             }
             catch (Exception ex)
@@ -134,9 +152,10 @@ namespace yumi1
             catch (Exception e)
             {
                 Console.WriteLine("Could not fetch rapid data");
-                Console.WriteLine(e.StackTrace);}
+                Console.WriteLine(e.StackTrace);
+            }
 
-            if (System.String.IsNullOrWhiteSpace(rd.StringValue))
+            if (!System.String.IsNullOrWhiteSpace(rd.StringValue))
             {
                 Console.WriteLine("{0} : {1} ", taskName, rd.StringValue);
             }
@@ -152,9 +171,13 @@ namespace yumi1
         private static void RapidVar_ValueChanged(object sender, DataValueChangedEventArgs e)
         {
             var x = (RapidData)sender;
-            if (System.String.IsNullOrWhiteSpace(x.StringValue))
-                Console.WriteLine("{0} : {1} modified at {2}", x, x.StringValue, e.Time);
-            
+            string code = x.StringValue.Replace("\"", string.Empty);
+            if (!System.String.IsNullOrWhiteSpace(x.StringValue))
+            {
+                Console.WriteLine("{0} : {1} modified at {2}", x, code, e.Time);
+                ReadReplaceRequest("transfer_file.txt", code);
+                //response = Pfs4.ClassLibrary.SendRequest("127.0.0.1", ReadReplaceRequest("transfer_file.txt", x.StringValue));
+            }
         }
     }
 }

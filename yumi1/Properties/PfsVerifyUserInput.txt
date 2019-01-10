@@ -1,0 +1,4 @@
+﻿REQUEST_TYPE=PfsVerifyUserInput
+DATABASE=
+USER_ID=
+PASSWORD=

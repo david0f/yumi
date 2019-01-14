@@ -21,5 +21,10 @@ namespace yumi1
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form1());
         }
+
+        static public void NoController()
+        {
+            MessageBox.Show("No controllers found on the network.");
+        }
     }
 }

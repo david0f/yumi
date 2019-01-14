@@ -62,11 +62,21 @@ namespace yumi1
                 }
                 finally
                 {
-                    statusLabel.Text = "Connected";
-                    BindingSource source = new BindingSource(robot, "CodeListL");
-                    dataGridView1.DataSource = source;
-                    BindingSource source2 = new BindingSource(robot, "CodeListR");
-                    dataGridView2.DataSource = source2;
+                    switch (robot.status)
+                    {
+                        case Status.Connected:
+                            statusLabel.Text = "Connected";
+                            // bind the tables to the codes.
+                            BindingSource source = new BindingSource(robot, "CodeListL");
+                            dataGridView1.DataSource = source;
+                            BindingSource source2 = new BindingSource(robot, "CodeListR");
+                            dataGridView2.DataSource = source2;
+                            break;
+                        case Status.NotFound:
+                            statusLabel.Text = "No controllers found.";
+                            Program.NoController();
+                            break;
+                    }       
                 }
             }
             else

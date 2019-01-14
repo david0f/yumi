@@ -46,7 +46,7 @@ namespace yumi1
 
     public enum Status
     {
-        Disconnected, NotAvailable, Connecting, Connected,
+        Disconnected, NotFound, NotAvailable, Connecting, Connected,
     }
 
     public class YuMi : INotifyPropertyChanged
@@ -153,46 +153,51 @@ namespace yumi1
             NetworkScanner scanner = new NetworkScanner();
             scanner.Scan();
             ControllerInfoCollection controllers = scanner.Controllers;
+            if (controllers.Count == 0)
+                status = Status.NotFound;
             Console.Out.WriteLine("Number of controllers found: {0}", controllers.Count);
             //connecting to first controller found. usually only one is present.
-            selectedController = controllers.First();
-            Console.Out.WriteLine(selectedController.Name + " " + selectedController.HostName + " " + selectedController.IPAddress + " " + selectedController.Availability);
-            Name = selectedController.Name + "\n" + selectedController.IPAddress;
-
-            if (selectedController.Availability == Availability.Available)
+            if (status != Status.NotFound)
             {
-                try
+                selectedController = controllers.First();
+                Console.Out.WriteLine(selectedController.Name + " " + selectedController.HostName + " " + selectedController.IPAddress + " " + selectedController.Availability);
+                Name = selectedController.Name + "\n" + selectedController.IPAddress;
+
+                if (selectedController.Availability == Availability.Available)
                 {
-                    status = Status.Connecting;
-                    controller = ControllerFactory.CreateFrom(selectedController);
-                    controller.Logon(UserInfo.DefaultUser);
-                    status = Status.Connected;
+                    try
+                    {
+                        status = Status.Connecting;
+                        controller = ControllerFactory.CreateFrom(selectedController);
+                        controller.Logon(UserInfo.DefaultUser);
+                        status = Status.Connected;
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Could not establish a connection to the controller" + Environment.NewLine + e.StackTrace);
+                        status = Status.Disconnected;
+                    }
+                    finally { Console.Out.WriteLine("Connected to " + controller.IPAddress); }
                 }
-                catch (Exception e)
+                else
                 {
-                    Console.WriteLine("Could not establish a connection to the controller" + Environment.NewLine + e.StackTrace);
+                    Console.WriteLine("The controller is not available for connections");
+                    status = Status.NotAvailable;
                     status = Status.Disconnected;
                 }
-                finally { Console.Out.WriteLine("Connected to " + controller.IPAddress); }
-            }
-            else
-            {
-                Console.WriteLine("The controller is not available for connections");
-                status = Status.NotAvailable;
-                status = Status.Disconnected;
-            }
 
-            controller.OperatingModeChanged += Controller_ModeChangedHandler;
+                controller.OperatingModeChanged += Controller_ModeChangedHandler;
 
-            Console.Out.WriteLine(controller.OperatingMode);
-            tasks = controller.Rapid.GetTasks();
-            foreach (var task in tasks)
-            {
-                Console.Out.WriteLine("Current task on the controller: {0} ", task.Name);
+                Console.Out.WriteLine(controller.OperatingMode);
+                tasks = controller.Rapid.GetTasks();
+                foreach (var task in tasks)
+                {
+                    Console.Out.WriteLine("Current task on the controller: {0} ", task.Name);
+                }
+
+                PrintRapidData(Tasks.LEFT, Modules.LEFT, "codeL");
+                PrintRapidData(Tasks.RIGHT, Modules.RIGHT, "codeR");
             }
-
-            PrintRapidData(Tasks.LEFT, Modules.LEFT, "codeL");
-            PrintRapidData(Tasks.RIGHT, Modules.RIGHT, "codeR");
         }
 
         private void PrintRapidData(string taskName, string moduleName, string varName)

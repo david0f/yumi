@@ -181,7 +181,6 @@
             // 
             this.yuMiBindingSource.DataSource = typeof(yumi1.YuMi);
             // 
-            // 
             // dataGridView2
             // 
             this.dataGridView2.AllowUserToAddRows = false;

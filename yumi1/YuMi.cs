@@ -39,9 +39,9 @@ namespace yumi1
 
     public class Requests
     {
-        public static string SerialNumber = "SERIAL_NUMBER=";
-        public static string LoginUser = "USER_ID=";
-        public static string LoginPassword = "PASSWORD=";
+        public static string SerialNumber = "SERIAL_NUM";
+        public static string LoginUser = "USER_ID";
+        public static string LoginPassword = "PASSWORD";
     }
 
     public enum Status

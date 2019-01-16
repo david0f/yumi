@@ -5,6 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -45,7 +46,7 @@ namespace yumi1
         {
 
         }
-
+        // to do : add clear list button and implement
         private void buttonConnect_Click(object sender, EventArgs e)
         {
             if (robot.status != Status.Connected)
@@ -71,6 +72,8 @@ namespace yumi1
                             dataGridView1.DataSource = source;
                             BindingSource source2 = new BindingSource(robot, "CodeListR");
                             dataGridView2.DataSource = source2;
+                            dataGridView1.CellMouseDoubleClick += DataGridView_CellMouseDoubleClick;
+                            dataGridView2.CellMouseDoubleClick += DataGridView_CellMouseDoubleClick;
                             break;
                         case Status.NotFound:
                             statusLabel.Text = "No controllers found.";
@@ -82,6 +85,44 @@ namespace yumi1
             else
             {
                 MessageBox.Show("The connection is already established.");
+            }
+        }
+
+        async private void DataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            var senderGrid = (DataGridView)sender;
+            if (e.ColumnIndex == 0 && e.RowIndex >=0)
+            {
+                string statusLabelTemp = statusLabel.Text;
+                var item = senderGrid.Rows[e.RowIndex].Cells[0].Value.ToString();
+                
+                try
+                {
+                    
+                    statusLabel.Text = "Processing request...";
+                    if (!String.IsNullOrWhiteSpace(item))
+                    {
+                        statusLabel.Text = String.Format("{0} : {1}", "Saving request using code", item);
+                        PfsHandler.ReadReplaceRequest("transfer_file.txt", item, Requests.SerialNumber);
+                    }
+                    else
+                        MessageBox.Show("The request could not be empty.");
+                }
+                catch (Exception s)
+                {
+                    Console.WriteLine(s.StackTrace);
+                    statusLabel.Text = "Error while saving.";
+                    Task wait = Task.Delay(2000);
+                    await wait;
+                }
+                finally
+                {
+                    statusLabel.Text = "Done.";
+                    MessageBox.Show("Transfer file saved.");
+                    Task wait = Task.Delay(2000);
+                    await wait;
+                }
+                statusLabel.Text = statusLabelTemp;
             }
         }
 

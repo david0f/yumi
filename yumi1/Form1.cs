@@ -39,7 +39,31 @@ namespace yumi1
 
         private void buttonLogin_Click(object sender, EventArgs e)
         {
+            if (textBox1.Text != String.Empty && textBox2.Text != String.Empty)
+            {
+                try
+                {
+                    PfsHandler.ReadReplaceRequest("PfsVerifyUserInput", Properties.Resources.PfsVerifyUserInput, new string[] { textBox1.Text, textBox2.Text }, new string[] { "USER_ID", "PASSWORD" });
+                    if (PfsHandler.ResponseOK())
+                    {
+                        textBox1.Enabled = false;
+                        textBox2.Enabled = false;
+                        buttonLogin.Enabled = false;
+                        MessageBox.Show("Logged in.");
+                    }
+                    
 
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.StackTrace);
+                }
+                
+            }
+            else
+            {
+                MessageBox.Show("Make sure both fields are not empty.");
+            }
         }
 
         private void Form1_Load_1(object sender, EventArgs e)
@@ -88,7 +112,7 @@ namespace yumi1
             }
         }
 
-        async private void DataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        private void DataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             var senderGrid = (DataGridView)sender;
             if (e.ColumnIndex == 0 && e.RowIndex >=0)
@@ -103,7 +127,12 @@ namespace yumi1
                     if (!String.IsNullOrWhiteSpace(item))
                     {
                         statusLabel.Text = String.Format("{0} : {1}", "Saving request using code", item);
-                        PfsHandler.ReadReplaceRequest("transfer_file.txt", item, Requests.SerialNumber);
+                        PfsHandler.ReadReplaceRequest("PfsSendSignOff",Properties.Resources.PfsSendSignOff, item, Requests.SerialNumber);
+                        if (PfsHandler.ResponseOK())
+                        {
+                            bool ok = true;
+                        }
+
                     }
                     else
                         MessageBox.Show("The request could not be empty.");
@@ -112,15 +141,11 @@ namespace yumi1
                 {
                     Console.WriteLine(s.StackTrace);
                     statusLabel.Text = "Error while saving.";
-                    Task wait = Task.Delay(2000);
-                    await wait;
                 }
                 finally
                 {
                     statusLabel.Text = "Done.";
                     MessageBox.Show("Transfer file saved.");
-                    Task wait = Task.Delay(2000);
-                    await wait;
                 }
                 statusLabel.Text = statusLabelTemp;
             }

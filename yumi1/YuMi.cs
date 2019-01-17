@@ -251,7 +251,6 @@ namespace yumi1
             if (!string.IsNullOrWhiteSpace(var.StringValue))
             {
                 Console.WriteLine("{0} : {1} modified at {2}", var, extracted, e.Time);
-                PfsHandler.ReadReplaceRequest("transfer_file.txt", extracted, Requests.SerialNumber);
                 //Pfs4.ClassLibrary.SendRequest("127.0.0.1", ReadReplaceRequest("transfer_file.txt", x.StringValue));
             }
         }
